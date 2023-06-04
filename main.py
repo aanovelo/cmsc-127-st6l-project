@@ -1,3 +1,5 @@
+import friend
+
 def expense_function():
     print("[1] Add an expense")
     print("[2] Delete an expense")
@@ -26,21 +28,24 @@ def friend_function():
     print("[3] Search a friend")
     print("[4] Update a friend")
     print("[5] View a friend")
+    print("[6] Exit")
 
     choice_2 = input("Enter the number corresponding to the feature you want to choose: ")
     
-    # if choice_2 == '1':
-        # call the function
-    # elif choice_2 == '2':
-        # call the function
-    # elif choice_2 == '3':
-        # call the function
-    # elif choice_2 == '4':
-         # call the function
-    # elif choice_2 == '5':
-         # call the function
-    # else:
-        #print("Invalid choice!")
+    if choice_2 == '1':
+        friend.addFriend()
+    elif choice_2 == '2':
+        friend.deleteFriend()
+    elif choice_2 == '3':
+        friend.searchFriend()
+    elif choice_2 == '4':
+        friend.updateFriend()
+    elif choice_2 == '5':
+        friend.viewFriend()
+    elif choice_2 == '6':
+        print("Exiting...")
+    else:
+        print("Invalid choice!")
 
 def group_function():
     print("[1] Add a group")
