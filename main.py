@@ -1,4 +1,5 @@
 import friend
+import expense
 
 def expense_function():
     print("[1] Add an expense")
@@ -9,18 +10,18 @@ def expense_function():
 
     choice_1 = input("Enter the number corresponding to the feature you want to choose: ")
     
-    # if choice_1 == '1':
-        # call the function
-    # elif choice_1 == '2':
-        # call the function
-    # elif choice_1 == '3':
-        # call the function
-    # elif choice_1 == '4':
-         # call the function
-    # elif choice_1 == '5':
-         # call the function
-    # else:
-        #print("Invalid choice!")
+    if choice_1 == '1':
+        expense.addExpense()
+    elif choice_1 == '2':
+        expense.deleteExpense()
+    elif choice_1 == '3':
+        expense.searchExpense()
+    elif choice_1 == '4':
+        expense.updateExpense()
+    elif choice_1 == '5':
+        expense.viewExpense()
+    else:
+        print("Invalid choice!")
 
 def friend_function():
     print("[1] Add a friend")
