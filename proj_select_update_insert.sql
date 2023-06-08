@@ -12,9 +12,11 @@ CREATE TABLE app_user (
 
 CREATE TABLE user_friend (
     user_id INT NOT NULL,
+    friend_id INT AUTO_INCREMENT,
     friend VARCHAR(40),
     CONSTRAINT fk_user_friend FOREIGN KEY(user_id) REFERENCES app_user(user_id),
-    CONSTRAINT u_friend UNIQUE(friend)
+    CONSTRAINT u_friend UNIQUE(friend),
+    PRIMARY KEY(friend_id)
 );
 
 CREATE TABLE user_group (
@@ -30,12 +32,14 @@ CREATE TABLE user_group (
 CREATE TABLE app_transaction (
     transaction_id INT AUTO_INCREMENT,
     user_id INT NOT NULL,
+    friend_id INT NOT NULL,
     group_id INT NOT NULL,
     split_amount FLOAT(7,2),
     transaction_date DATE,
     PRIMARY KEY(transaction_id),
     CONSTRAINT fk_user_transaction FOREIGN KEY(user_id) REFERENCES app_user(user_id),
-    CONSTRAINT fk_group_transaction FOREIGN KEY(group_id) REFERENCES user_group(group_id)
+    CONSTRAINT fk_group_transaction FOREIGN KEY(group_id) REFERENCES user_group(group_id),
+    CONSTRAINT fk_friend_transaction FOREIGN KEY(friend_id) REFERENCES user_friend(friend_id)
 );
 
 CREATE TABLE transaction_creditor (

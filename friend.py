@@ -1,5 +1,6 @@
 from connect import cnx, cursor
 from tabulate import tabulate
+import expense
 
 # add a friend
 def addFriend():
@@ -102,6 +103,7 @@ def updateFriend():
 
 # view a friend
 def viewFriend():
+    
     # get the list of friends
     cursor.execute("SELECT * FROM user_friend")
     friends = cursor.fetchall()
@@ -125,6 +127,14 @@ def viewFriend():
     print("Friend Details:")
     details = tabulate([friend], headers=["User ID", "Friend"], tablefmt="psql")
     print(details)
+
+    print("[1] Create transaction")
+    print("[2] Exit")
+    choice1 = int(input("Enter your choice: "))
+    if (choice1 == 1):
+        expense.addExpense("Friend")
+    elif (choice1 == 2):
+        print("Exiting")
 
 # this is just to check if it was successful
 def printFriends():
