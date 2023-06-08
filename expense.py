@@ -1,11 +1,34 @@
 from connect import cnx, cursor
 from tabulate import tabulate
 from mysql.connector import Error
-
+import group
+import friend
 
 def addExpense():
     try:
+        print("[1] Add expense to a group")
+        print("[2] Add expense to a friend")
+        inputUser = int(input("Input choice: "))
+
+        if inputUser == 1:
+            group.printGroups()
+            groupChoice = int(input("Group choice: "))
+        
+        elif inputUser == 2:
+            friend.printFriends()
+            friendChoice = int(input("Friend choice: "))
+            if friendChoice == 
+
+        
+
+        #ADD TO A GROUP
+        #ADD TO A FRIEND
+
+        
         # Get the input from the user
+        viewFriend()
+        
+        
         friend_name = input("Enter the name of your friend: ")
         expense_amount = float(input("Enter the expense amount: "))
 
@@ -20,8 +43,8 @@ def addExpense():
         friend_id = result[0]
 
         # Insert the expense into the expenses table
-        sql = "INSERT INTO app_transaction (user_id, split_amount, transaction_date) VALUES (%s, %s, CURRENT_DATE())"
-        cursor.execute(sql, (friend_id, expense_amount))
+        sql = "INSERT INTO app_transaction (user_id, group_id, split_amount, transaction_date) VALUES (%s, %s,%s, CURRENT_DATE())"
+        cursor.execute(sql, (friend_id, 1, expense_amount))
         cnx.commit()
 
         # Retrieve the transaction ID
@@ -41,7 +64,7 @@ def addExpense():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
 def deleteExpense():
@@ -91,7 +114,7 @@ def deleteExpense():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
 def searchExpense():
@@ -126,7 +149,7 @@ def searchExpense():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
 def updateExpense():
@@ -175,7 +198,7 @@ def updateExpense():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
 def viewExpenses():
@@ -203,7 +226,7 @@ def viewExpenses():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
 def printExpenses():
@@ -230,4 +253,4 @@ def printExpenses():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
