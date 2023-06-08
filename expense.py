@@ -1,135 +1,174 @@
 from connect import cnx, cursor
 from tabulate import tabulate
+from mysql.connector import Error
 
-# add a friend
+
 def addExpense():
+    # Get the input from the user
     friend_name = input("Enter the name of your friend: ")
-    
-    # insert a friend
-    sql = "INSERT INTO user_friend (user_id, friend) VALUES (%s,%s)"
+    expense_amount = float(input("Enter the expense amount: "))
 
-    # pass the parameter
-    cursor.execute(sql, (1,friend_name))
+    # Retrieve the friend's ID from the database
+    cursor.execute("SELECT user_id FROM user_friend WHERE friend = %s", (friend_name,))
+    result = cursor.fetchone()
+
+    if result is None:
+        print(f"Friend '{friend_name}' not found.")
+        return
+
+    friend_id = result[0]
+
+    # Insert the expense into the expenses table
+    sql = "INSERT INTO app_transaction (user_id, split_amount, transaction_date) VALUES (%s, %s, CURRENT_DATE())"
+    cursor.execute(sql, (friend_id, expense_amount))
     cnx.commit()
 
-    # print success message
-    print(f"Friend '{friend_name}' added successfully!")
+    # Retrieve the transaction ID
+    transaction_id = cursor.lastrowid
 
-    # check the table
-    printExpense()
+    # Insert the creditor information
+    sql_creditor = "INSERT INTO transaction_creditor (transaction_id, creditor) VALUES (%s, %s)"
+    cursor.execute(sql_creditor, (transaction_id, friend_name))
+    cnx.commit()
 
-# delete a friend
+    print(f"Expense for friend '{friend_name}' added successfully!")
+    printExpenses()
+
+
+   
 def deleteExpense():
-    # show the list of friends for user_id = 1
-    cursor.execute("SELECT friend FROM user_friend WHERE user_id=1")
-    friends = cursor.fetchall()
-    print(friends)
-    print("List of Friends:")
-    table = tabulate(enumerate(friends, start=1), headers=["#", "Friend"], tablefmt="psql")
+    # show the list of expenses
+    cursor.execute("""
+        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+        FROM app_transaction t
+        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+        INNER JOIN user_friend f ON c.creditor = f.friend
+    """)
+    expenses = cursor.fetchall()
+
+    # print the list
+    print("List of Expenses:")
+    table = tabulate(enumerate(expenses, start=1), headers=["#", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
     print(table)
     print()
 
     # ask the user for input
-    friend_index = int(input("Enter the number corresponding to the friend you want to delete: ")) - 1
-    
-    if friend_index < 0 or friend_index >= len(friends):
-        print("Invalid friend index.")
+    expense_index = int(input("Enter the number corresponding to the expense you want to delete: ")) - 1
+
+    if expense_index < 0 or expense_index >= len(expenses):
+        print("Invalid expense index.")
         return
 
-    friend_name = friends[friend_index][0]
+    expense = expenses[expense_index]
+    transaction_id = expense[0]
 
-    # delete the selected friend
-    sql = "DELETE FROM user_friend WHERE friend = %s"
-    cursor.execute(sql, (friend_name,))
+    # delete the selected expense
+    sql_transaction = "DELETE FROM app_transaction WHERE transaction_id = %s"
+    cursor.execute(sql_transaction, (transaction_id,))
     cnx.commit()
 
     if cursor.rowcount > 0:
-        print(f"Friend '{friend_name}' deleted successfully!")
+        print(f"Expense with transaction ID '{transaction_id}' deleted successfully!")
     else:
-        print(f"Friend '{friend_name}' not found.")
+        print(f"Expense with transaction ID '{transaction_id}' not found.")
 
-    # check table
-    printExpense()
+    printExpenses()
 
-# search a friend
+
 def searchExpense():
     # ask the user for input
-    friend_name = input("Enter the name of the friend you want to search for: ")
+    friend_name = input("Enter the name of the friend whose expenses you want to search for: ")
 
-    # search the friend
-    sql = "SELECT * FROM user_friend WHERE friend = %s"
+    # search the expenses
+    sql = """
+        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+        FROM app_transaction t
+        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+        INNER JOIN user_friend f ON c.creditor = f.friend
+        WHERE f.friend = %s
+    """
     cursor.execute(sql, (friend_name,))
     results = cursor.fetchall()
 
-    # show the friend
+    # show the expenses
     if len(results) > 0:
-        print("Search Results:")
-        table = tabulate(results, headers=["User ID", "Friend"], tablefmt="psql")
+        print(f"Search Results for expenses of friend '{friend_name}':")
+        table = tabulate(results, headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
         print(table)
     else:
-        print(f"No results found for friend '{friend_name}'.")
+        print(f"No expenses found for friend '{friend_name}'.")
 
-# update a friend
 def updateExpense():
-    # get the list of friends
-    cursor.execute("SELECT friend FROM user_friend")
-    friends = cursor.fetchall()
+    # get the list of expenses
+    cursor.execute("""
+        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+        FROM app_transaction t
+        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+        INNER JOIN user_friend f ON c.creditor = f.friend
+    """)
+    expenses = cursor.fetchall()
 
     # print the list
-    print("List of Friend Names:")
-    table = tabulate(enumerate(friends, start=1), headers=["#", "Friend Name"], tablefmt="psql")
+    print("List of Expenses:")
+    table = tabulate(enumerate(expenses, start=1), headers=["#", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
     print(table)
     print()
 
-    # ask the user which friend to update
-    friend_index = int(input("Enter the number corresponding to the friend you want to update: ")) - 1
+    # ask the user which expense to update
+    expense_index = int(input("Enter the number corresponding to the expense you want to update: ")) - 1
 
-    if friend_index < 0 or friend_index >= len(friends):
-        print("Invalid friend index.")
+    if expense_index < 0 or expense_index >= len(expenses):
+        print("Invalid expense index.")
         return
 
-    # ask the user for a new name
-    new_name = input("Enter the new name for the friend: ")
+    # ask the user for a new amount
+    new_amount = float(input("Enter the new split amount for the expense: "))
 
-    # Update the name of the selected friend
-    friend = friends[friend_index]
-    sql = "UPDATE user_friend SET friend = %s WHERE friend = %s"
-    cursor.execute(sql, (new_name, friend[0]))
+    expense = expenses[expense_index]
+    transaction_id = expense[0]
+
+    # Update the amount of the selected expense
+    sql = "UPDATE app_transaction SET split_amount = %s WHERE transaction_id = %s"
+    cursor.execute(sql, (new_amount, transaction_id))
     cnx.commit()
 
-    print("Friend name updated successfully.")
-    printExpense()
+    print(f"Split amount for expense with transaction ID '{transaction_id}' updated successfully.")
+    printExpenses()
 
-# view a friend
-def viewExpense():
-    # get the list of friends
-    cursor.execute("SELECT * FROM user_friend")
-    friends = cursor.fetchall()
+
+def viewExpenses():
+    # get the list of expenses
+    cursor.execute("""
+        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+        FROM app_transaction t
+        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+        INNER JOIN user_friend f ON c.creditor = f.friend
+    """)
+    expenses = cursor.fetchall()
 
     # print the list
-    print("List of Friends:")
-    table = tabulate(enumerate(friends, start=1), headers=["#", "User ID", "Friend"], tablefmt="psql")
+    print("List of Expenses:")
+    table = tabulate(enumerate(expenses, start=1), headers=["#", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
     print(table)
     print()
 
-    # ask the user for input
-    friend_index = int(input("Enter the number corresponding to the friend you want to view: ")) - 1
-    
-    if friend_index < 0 or friend_index >= len(friends):
-        print("Invalid friend index.")
-        return
 
-    friend = friends[friend_index]
+def printExpenses():
+    cursor.execute("""
+        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+        FROM app_transaction t
+        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+        INNER JOIN user_friend f ON c.creditor = f.friend
+    """)
+    expenses = cursor.fetchall()
 
-    # print the details
-    print("Friend Details:")
-    details = tabulate([friend], headers=["User ID", "Friend"], tablefmt="psql")
-    print(details)
-
-# this is just to check if it was successful
-def printExpense():
-    cursor.execute('SELECT * FROM user_friend')  
-    col = [desc[0] for desc in cursor.description]
-    row = cursor.fetchall()
-    table = tabulate(row, headers=col, tablefmt='psql')
+    # print the expenses
+    print("List of Expenses:")
+    table = tabulate(expenses, headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"], tablefmt='psql')
     print(table)
+    print()
+
+
+
+
+
