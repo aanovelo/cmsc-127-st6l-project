@@ -17,7 +17,7 @@ def addExpense():
         elif inputUser == 2:
             friend.printFriends()
             friendChoice = int(input("Friend choice: "))
-            if friendChoice == 
+            # if friendChoice == 
 
         
 
