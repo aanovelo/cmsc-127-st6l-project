@@ -4,171 +4,230 @@ from mysql.connector import Error
 
 
 def addExpense():
-    # Get the input from the user
-    friend_name = input("Enter the name of your friend: ")
-    expense_amount = float(input("Enter the expense amount: "))
+    try:
+        # Get the input from the user
+        friend_name = input("Enter the name of your friend: ")
+        expense_amount = float(input("Enter the expense amount: "))
 
-    # Retrieve the friend's ID from the database
-    cursor.execute("SELECT user_id FROM user_friend WHERE friend = %s", (friend_name,))
-    result = cursor.fetchone()
+        # Retrieve the friend's ID from the database
+        cursor.execute("SELECT user_id FROM user_friend WHERE friend = %s", (friend_name,))
+        result = cursor.fetchone()
 
-    if result is None:
-        print(f"Friend '{friend_name}' not found.")
-        return
+        if result is None:
+            print(f"Friend '{friend_name}' not found.")
+            return
 
-    friend_id = result[0]
+        friend_id = result[0]
 
-    # Insert the expense into the expenses table
-    sql = "INSERT INTO app_transaction (user_id, split_amount, transaction_date) VALUES (%s, %s, CURRENT_DATE())"
-    cursor.execute(sql, (friend_id, expense_amount))
-    cnx.commit()
+        # Insert the expense into the expenses table
+        sql = "INSERT INTO app_transaction (user_id, split_amount, transaction_date) VALUES (%s, %s, CURRENT_DATE())"
+        cursor.execute(sql, (friend_id, expense_amount))
+        cnx.commit()
 
-    # Retrieve the transaction ID
-    transaction_id = cursor.lastrowid
+        # Retrieve the transaction ID
+        transaction_id = cursor.lastrowid
 
-    # Insert the creditor information
-    sql_creditor = "INSERT INTO transaction_creditor (transaction_id, creditor) VALUES (%s, %s)"
-    cursor.execute(sql_creditor, (transaction_id, friend_name))
-    cnx.commit()
+        # Insert the creditor information
+        sql_creditor = "INSERT INTO transaction_creditor (transaction_id, creditor) VALUES (%s, %s)"
+        cursor.execute(sql_creditor, (transaction_id, friend_name))
+        cnx.commit()
 
-    print(f"Expense for friend '{friend_name}' added successfully!")
-    printExpenses()
+        print(f"Expense for friend '{friend_name}' added successfully!")
+        printExpenses()
+
+    except (ValueError, Error) as e:
+        print("An error occurred while adding the expense:", str(e))
+
+    finally:
+        cursor.close()
+        cnx.close()
+        print("Connection closed.")
 
 
-   
 def deleteExpense():
-    # show the list of expenses
-    cursor.execute("""
-        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
-        FROM app_transaction t
-        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
-        INNER JOIN user_friend f ON c.creditor = f.friend
-    """)
-    expenses = cursor.fetchall()
+    try:
+        # show the list of expenses
+        cursor.execute("""
+            SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+            FROM app_transaction t
+            INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+            INNER JOIN user_friend f ON c.creditor = f.friend
+        """)
+        expenses = cursor.fetchall()
 
-    # print the list
-    print("List of Expenses:")
-    table = tabulate(enumerate(expenses, start=1), headers=["#", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
-    print(table)
-    print()
+        # print the list
+        print("List of Expenses:")
+        table = tabulate(enumerate(expenses, start=1),
+                         headers=["#", "Friend", "Split Amount", "Transaction Date"],
+                         tablefmt="psql")
+        print(table)
+        print()
 
-    # ask the user for input
-    expense_index = int(input("Enter the number corresponding to the expense you want to delete: ")) - 1
+        # ask the user for input
+        expense_index = int(input("Enter the number corresponding to the expense you want to delete: ")) - 1
 
-    if expense_index < 0 or expense_index >= len(expenses):
-        print("Invalid expense index.")
-        return
+        if expense_index < 0 or expense_index >= len(expenses):
+            print("Invalid expense index.")
+            return
 
-    expense = expenses[expense_index]
-    transaction_id = expense[0]
+        expense = expenses[expense_index]
+        transaction_id = expense[0]
 
-    # delete the selected expense
-    sql_transaction = "DELETE FROM app_transaction WHERE transaction_id = %s"
-    cursor.execute(sql_transaction, (transaction_id,))
-    cnx.commit()
+        # delete the selected expense
+        sql_transaction = "DELETE FROM app_transaction WHERE transaction_id = %s"
+        cursor.execute(sql_transaction, (transaction_id,))
+        cnx.commit()
 
-    if cursor.rowcount > 0:
-        print(f"Expense with transaction ID '{transaction_id}' deleted successfully!")
-    else:
-        print(f"Expense with transaction ID '{transaction_id}' not found.")
+        if cursor.rowcount > 0:
+            print(f"Expense with transaction ID '{transaction_id}' deleted successfully!")
+        else:
+            print(f"Expense with transaction ID '{transaction_id}' not found.")
 
-    printExpenses()
+        printExpenses()
+
+    except (ValueError, Error) as e:
+        print("An error occurred while deleting the expense:", str(e))
+
+    finally:
+        cursor.close()
+        cnx.close()
+        print("Connection closed.")
 
 
 def searchExpense():
-    # ask the user for input
-    friend_name = input("Enter the name of the friend whose expenses you want to search for: ")
+    try:
+        # ask the user for input
+        friend_name = input("Enter the name of the friend whose expenses you want to search for: ")
 
-    # search the expenses
-    sql = """
-        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
-        FROM app_transaction t
-        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
-        INNER JOIN user_friend f ON c.creditor = f.friend
-        WHERE f.friend = %s
-    """
-    cursor.execute(sql, (friend_name,))
-    results = cursor.fetchall()
+        # search the expenses
+        sql = """
+            SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+            FROM app_transaction t
+            INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+            INNER JOIN user_friend f ON c.creditor = f.friend
+            WHERE f.friend = %s
+        """
+        cursor.execute(sql, (friend_name,))
+        results = cursor.fetchall()
 
-    # show the expenses
-    if len(results) > 0:
-        print(f"Search Results for expenses of friend '{friend_name}':")
-        table = tabulate(results, headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
-        print(table)
-    else:
-        print(f"No expenses found for friend '{friend_name}'.")
+        # show the expenses
+        if len(results) > 0:
+            print(f"Search Results for expenses of friend '{friend_name}':")
+            table = tabulate(results,
+                             headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"],
+                             tablefmt="psql")
+            print(table)
+        else:
+            print(f"No expenses found for friend '{friend_name}'.")
+
+    except (ValueError, Error) as e:
+        print("An error occurred while searching for expenses:", str(e))
+
+    finally:
+        cursor.close()
+        cnx.close()
+        print("Connection closed.")
+
 
 def updateExpense():
-    # get the list of expenses
-    cursor.execute("""
-        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
-        FROM app_transaction t
-        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
-        INNER JOIN user_friend f ON c.creditor = f.friend
-    """)
-    expenses = cursor.fetchall()
+    try:
+        # get the list of expenses
+        cursor.execute("""
+            SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+            FROM app_transaction t
+            INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+            INNER JOIN user_friend f ON c.creditor = f.friend
+        """)
+        expenses = cursor.fetchall()
 
-    # print the list
-    print("List of Expenses:")
-    table = tabulate(enumerate(expenses, start=1), headers=["#", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
-    print(table)
-    print()
+        # print the list
+        print("List of Expenses:")
+        table = tabulate(enumerate(expenses, start=1),
+                         headers=["#", "Friend", "Split Amount", "Transaction Date"],
+                         tablefmt="psql")
+        print(table)
+        print()
 
-    # ask the user which expense to update
-    expense_index = int(input("Enter the number corresponding to the expense you want to update: ")) - 1
+        # ask the user which expense to update
+        expense_index = int(input("Enter the number corresponding to the expense you want to update: ")) - 1
 
-    if expense_index < 0 or expense_index >= len(expenses):
-        print("Invalid expense index.")
-        return
+        if expense_index < 0 or expense_index >= len(expenses):
+            print("Invalid expense index.")
+            return
 
-    # ask the user for a new amount
-    new_amount = float(input("Enter the new split amount for the expense: "))
+        # ask the user for a new amount
+        new_amount = float(input("Enter the new split amount for the expense: "))
 
-    expense = expenses[expense_index]
-    transaction_id = expense[0]
+        expense = expenses[expense_index]
+        transaction_id = expense[0]
 
-    # Update the amount of the selected expense
-    sql = "UPDATE app_transaction SET split_amount = %s WHERE transaction_id = %s"
-    cursor.execute(sql, (new_amount, transaction_id))
-    cnx.commit()
+        # Update the amount of the selected expense
+        sql = "UPDATE app_transaction SET split_amount = %s WHERE transaction_id = %s"
+        cursor.execute(sql, (new_amount, transaction_id))
+        cnx.commit()
 
-    print(f"Split amount for expense with transaction ID '{transaction_id}' updated successfully.")
-    printExpenses()
+        print(f"Split amount for expense with transaction ID '{transaction_id}' updated successfully.")
+        printExpenses()
+
+    except (ValueError, Error) as e:
+        print("An error occurred while updating the expense:", str(e))
+
+    finally:
+        cursor.close()
+        cnx.close()
+        print("Connection closed.")
 
 
 def viewExpenses():
-    # get the list of expenses
-    cursor.execute("""
-        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
-        FROM app_transaction t
-        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
-        INNER JOIN user_friend f ON c.creditor = f.friend
-    """)
-    expenses = cursor.fetchall()
+    try:
+        # get the list of expenses
+        cursor.execute("""
+            SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+            FROM app_transaction t
+            INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+            INNER JOIN user_friend f ON c.creditor = f.friend
+        """)
+        expenses = cursor.fetchall()
 
-    # print the list
-    print("List of Expenses:")
-    table = tabulate(enumerate(expenses, start=1), headers=["#", "Friend", "Split Amount", "Transaction Date"], tablefmt="psql")
-    print(table)
-    print()
+        # print the list
+        print("List of Expenses:")
+        table = tabulate(enumerate(expenses, start=1),
+                         headers=["#", "Friend", "Split Amount", "Transaction Date"],
+                         tablefmt="psql")
+        print(table)
+        print()
+
+    except Error as e:
+        print("An error occurred while viewing the expenses:", str(e))
+
+    finally:
+        cursor.close()
+        cnx.close()
+        print("Connection closed.")
 
 
 def printExpenses():
-    cursor.execute("""
-        SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
-        FROM app_transaction t
-        INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
-        INNER JOIN user_friend f ON c.creditor = f.friend
-    """)
-    expenses = cursor.fetchall()
+    try:
+        cursor.execute("""
+            SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
+            FROM app_transaction t
+            INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
+            INNER JOIN user_friend f ON c.creditor = f.friend
+        """)
+        expenses = cursor.fetchall()
 
-    # print the expenses
-    print("List of Expenses:")
-    table = tabulate(expenses, headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"], tablefmt='psql')
-    print(table)
-    print()
+        # print the expenses
+        print("List of Expenses:")
+        table = tabulate(expenses,
+                         headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"],
+                         tablefmt='psql')
+        print(table)
+        print()
 
+    except Error as e:
+        print("An error occurred while printing the expenses:", str(e))
 
-
-
-
+    finally:
+        cursor.close()
+        cnx.close()
+        print("Connection closed.")
