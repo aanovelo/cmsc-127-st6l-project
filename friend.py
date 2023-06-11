@@ -1,6 +1,7 @@
 from connect import cnx, cursor
 from tabulate import tabulate
 import expense
+from mysql.connector import Error
 
 # add a friend
 def addFriend():
@@ -18,6 +19,7 @@ def addFriend():
 
     # check the table
     printFriends()
+
 
 # delete a friend
 def deleteFriend():
@@ -138,8 +140,9 @@ def viewFriend():
 
 # this is just to check if it was successful
 def printFriends():
-    cursor.execute('SELECT * FROM user_friend')  
+    cursor.execute('SELECT * FROM user_friend WHERE user_id=1')  
     col = [desc[0] for desc in cursor.description]
     row = cursor.fetchall()
-    table = tabulate(row, headers=col, tablefmt='psql')
+    table = tabulate(enumerate(row, start=0), headers=["#",col], tablefmt='psql')
     print(table)
+

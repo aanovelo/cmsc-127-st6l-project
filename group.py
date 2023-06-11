@@ -2,9 +2,12 @@ from connect import cnx, cursor
 from tabulate import tabulate
 from mysql.connector import Error
 
+# cursor = cnx.cursor()
 
-def addGroup(user_id, group_name):
+def addGroup():
     try:
+        user_id = 1
+        group_name = input("Enter the name of your group: ")
         # Insert the group into the user_group table
         sql = "INSERT INTO user_group (user_id, group_name) VALUES (%s, %s)"
         cursor.execute(sql, (user_id, group_name))
@@ -14,11 +17,6 @@ def addGroup(user_id, group_name):
 
     except Error as e:
         print("An error occurred while adding the group:", str(e))
-
-    finally:
-        cursor.close()
-        cnx.close()
-        print("Connection closed.")
 
 
 def deleteGroup(group_id):
@@ -39,13 +37,14 @@ def deleteGroup(group_id):
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
-def searchGroup(group_name):
+def searchGroup():
     try:
+        group_name = input("Enter the name of the group you want to search: ")
         # Search for the group by name
-        sql = "SELECT * FROM user_group WHERE group_name = %s"
+        sql = "SELECT * FROM user_group WHERE group_name LIKE %s"
         cursor.execute(sql, (group_name,))
         results = cursor.fetchall()
 
@@ -60,10 +59,10 @@ def searchGroup(group_name):
     except Error as e:
         print("An error occurred while searching for groups:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
-        print("Connection closed.")
+    # finally:
+        # cursor.close()
+        # cnx.close()
+        # print("Connection closed.")
 
 
 def updateGroup(group_id, new_group_name):
@@ -78,10 +77,10 @@ def updateGroup(group_id, new_group_name):
     except Error as e:
         print("An error occurred while updating the group:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
-        print("Connection closed.")
+    # finally:
+        # cursor.close()
+        # cnx.close()
+        # print("Connection closed.")
 
 
 def viewGroup():
@@ -103,27 +102,43 @@ def viewGroup():
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
+        # print("Connection closed.")
 
 
 def printGroups():
     try:
         # Retrieve all groups
-        cursor.execute("SELECT * FROM user_group")
+        cursor.execute("SELECT * FROM user_group WHERE user_id = 1")
         groups = cursor.fetchall()
 
         # Print the list of groups
         print("List of Groups:")
-        table = tabulate(groups, headers=["Group ID", "User ID", "Group Name", "Group Outstanding", "Total Expense"],
-                         tablefmt="psql")
+        table = tabulate(enumerate(groups,start=0), headers=["Choice", "Group ID", "User ID", "Group Name", "Group Outstanding", "Total Expense"],
+                        tablefmt="psql")
         print(table)
     
     except Error as e:
         print("An error occurred while printing the groups:", str(e))
 
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
+        # print("Connection closed.")
+
+def addExpense(groupChoice):
+    try:
+        sql = "SELECT * FROM user_friend WHERE group_name = ? OR group_id = ?"
+        cursor.execute(sql, (groupChoice, groupChoice))
+        results = cursor.fetchall()
+        print(results)
+
+        if len(results) > 0:
+            print("test")
+        else:
+            print("Group not found.")
+    except Error as e:
+        print("An error occured while adding expense", str(e))
     finally:
         cursor.close()
         cnx.close()
-        print("Connection closed.")
-
-
+        # print("Connection closed.")

@@ -5,7 +5,7 @@ import group
 import view
 
 def expense_function():
-    print("[1] Add an expense")
+    print("\n[1] Add an expense")
     print("[2] Delete an expense")
     print("[3] Search an expense")
     print("[4] Update an expense")
@@ -31,7 +31,7 @@ def expense_function():
         print("Invalid choice!")
 
 def friend_function():
-    print("[1] Add a friend")
+    print("\n[1] Add a friend")
     print("[2] Delete a friend")
     print("[3] Search a friend")
     print("[4] Update a friend")
@@ -59,7 +59,7 @@ def friend_function():
         print("Invalid choice!")
 
 def group_function():
-    print("[1] Add a group")
+    print("\n[1] Add a group")
     print("[2] Delete a group")
     print("[3] Search a group")
     print("[4] Update a group")
@@ -85,7 +85,7 @@ def group_function():
         print("Invalid choice!")
 
 def view_owedio():
-    print("[1] View all expenses made within a month;")
+    print("\n[1] View all expenses made within a month;")
     print("[2] View all expenses made with a friend")
     print("[3] View all expenses made with a group")
     print("[4] View current balance from all expenses")
@@ -117,7 +117,7 @@ def menu():
     
     # menu will be printed over and over until the user exits the program
     while True:
-        print("[1] Add, delete, search, and update an expense")
+        print("\n[1] Add, delete, search, and update an expense")
         print("[2] Add, delete, search, and update a friend")
         print("[3] Add, delete, search, and update a group")
         print("[4] View")

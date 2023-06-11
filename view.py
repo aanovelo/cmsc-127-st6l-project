@@ -2,7 +2,7 @@ from connect import cnx, cursor
 from tabulate import tabulate
 
 # view all expenses made within a month
-def expense_within_month():
+def expense_within_month(): #gagawing SUM na lang itoo
     query = "SELECT * FROM app_transaction WHERE MONTH(transaction_date) = [month] AND YEAR(transaction_date) = [year]"
     cursor.execute(query)
     result = cursor.fetchall()
@@ -10,7 +10,7 @@ def expense_within_month():
     print(tabulate(result, headers=headers))
 
 # view all expenses made with a friend
-def expenses_with_friend():
+def expenses_with_friend(): #gagawing SUM na lang itoo
     query = "SELECT at.* FROM app_transaction at JOIN user_friend uf ON at.user_id = uf.user_id WHERE uf.friend = '[friend_name]'"
     cursor.execute(query)
     result = cursor.fetchall()
@@ -18,7 +18,7 @@ def expenses_with_friend():
     print(tabulate(result, headers=headers))
 
 # view all expenses made with a group
-def expense_with_grp():
+def expense_with_grp(): #gagawing SUM na lang itoo
     query = "SELECT at.* FROM app_transaction at JOIN user_group ug ON at.group_id = ug.group_id WHERE ug.group_id = [group_id]"
     cursor.execute(query)
     result = cursor.fetchall()
