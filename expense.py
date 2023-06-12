@@ -6,14 +6,15 @@ import group
 import friend
 
 def addExpense():
-
-    print("\n[1] Add expense to a group")
+    print("\n===========EXPENSE MENU===========")
+    print("[1] Add expense to a group")
     print("[2] Add expense to a friend")
+    print("==================================\n")
     inputUser = int(input("Input choice: "))
 
     if inputUser == 1:
         group.printGroups()
-        groupChoice = int(input("Group choice: "))
+        groupChoice = int(input("Group choice: ")) - 1
         addExpenseToGroup(groupChoice)
     
     elif inputUser == 2:
@@ -62,9 +63,9 @@ def addExpenseToFriend(friendChoice):
     except (ValueError, Error) as e:
         print("An error occurred while adding the expense:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 def addExpenseToGroup(groupChoice):
@@ -80,14 +81,14 @@ def addExpenseToGroup(groupChoice):
         query_members = "SELECT * from group_member WHERE group_id = %s"
         cursor.execute(query_members, (selectedGroupId,))
         numberOfMembers = cursor.fetchall()
-
+        print(numberOfMembers)
         print("\nSelect\n[1] You")
 
-        friendName = "SELECT * from user_friend WHERE friend_id = %s"
+        friendName = "SELECT * from app_user WHERE user_id = %s"
         for index, member in enumerate(numberOfMembers, start=2):
             cursor.execute(friendName,(member[1],))
             frName = cursor.fetchone()
-            print(f"[{index}] {frName[2]}")
+            print(f"[{index}] {frName[1]}")
         paidBy = int(input("Select friend who paid: "))
 
         sql1 = "INSERT INTO app_transaction (user_id, group_id, split_amount, transaction_date) VALUES (%s,%s,%s, CURRENT_DATE())"
@@ -128,9 +129,9 @@ def addExpenseToGroup(groupChoice):
     except (ValueError, Error) as e:
         print("An error occurred while adding the expense:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 def deleteExpense():
@@ -176,9 +177,9 @@ def deleteExpense():
     except (ValueError, Error) as e:
         print("An error occurred while deleting the expense:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 def searchExpense():
@@ -193,9 +194,9 @@ def searchExpense():
     except (ValueError, Error) as e:
         print("An error occurred while searching for expenses:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 def searchFriendExpense():
@@ -226,9 +227,9 @@ def searchFriendExpense():
     except (ValueError, Error) as e:
         print("An error occurred while searching for expenses:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 def searchGroupExpense():
@@ -259,9 +260,9 @@ def searchGroupExpense():
     except (ValueError, Error) as e:
         print("An error occurred while searching for expenses:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 def updateExpense():
@@ -294,7 +295,7 @@ def updateExpense():
         transaction_id = expense[0]
         print(transaction_id)
 
-        sql2 = "SELECT friend_id FROM transaction_debitor WHERE transaction_id = %s"
+        sql2 = "SELECT debitor_id FROM transaction_debitor WHERE transaction_id = %s"
         cursor.execute(sql2,(transaction_id,))
         count = cursor.fetchall()
         print(count)
@@ -310,37 +311,9 @@ def updateExpense():
     except (ValueError, Error) as e:
         print("An error occurred while updating the expense:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
-        # print("Connection closed.")
-
-
-def viewExpenses():
-    try:
-        # get the list of expenses
-        cursor.execute("""
-            SELECT t.transaction_id, f.friend, t.split_amount, t.transaction_date
-            FROM app_transaction t
-            INNER JOIN transaction_creditor c ON t.transaction_id = c.transaction_id
-            INNER JOIN user_friend f ON c.creditor = f.friend
-        """)
-        expenses = cursor.fetchall()
-
-        # print the list
-        print("List of Expenses:")
-        table = tabulate(enumerate(expenses, start=1),
-                         headers=["#", "Friend", "Split Amount", "Transaction Date"],
-                         tablefmt="psql")
-        print(table)
-        print()
-
-    except Error as e:
-        print("An error occurred while viewing the expenses:", str(e))
-
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")
 
 
@@ -363,7 +336,7 @@ def printExpenses():
     except Error as e:
         print("An error occurred while printing the expenses:", str(e))
 
-    finally:
-        cursor.close()
-        cnx.close()
+    # finally:
+    #     cursor.close()
+    #     cnx.close()
         # print("Connection closed.")

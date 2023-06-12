@@ -22,7 +22,7 @@ CREATE TABLE user_friend (
     friend_id INT NOT NULL,
     friend VARCHAR(40),
     CONSTRAINT fk_user_friend FOREIGN KEY(user_id) REFERENCES app_user(user_id),
-    CONSTRAINT fk_friend_id FOREIGN KEY (friend_id) REFERENCES app_user(user_id),
+    CONSTRAINT fk_friend_id FOREIGN KEY (friend_id) REFERENCES app_user(user_id)
 );
 
 CREATE TABLE user_group (
@@ -37,10 +37,9 @@ CREATE TABLE user_group (
 
 CREATE TABLE group_member (
     group_id INT,
-    friend_id INT,
+    member_id INT,
     CONSTRAINT fk_group_member_group FOREIGN KEY(group_id) REFERENCES user_group(group_id),
-    CONSTRAINT fk_group_member_friend FOREIGN KEY(friend_id) REFERENCES user_friend(friend_id),
-    PRIMARY KEY(group_id, friend_id)
+    CONSTRAINT fk_group_member_id FOREIGN KEY(member_id) REFERENCES app_user(user_id)
 );
 
 CREATE TABLE app_transaction (
@@ -58,16 +57,16 @@ CREATE TABLE app_transaction (
 
 CREATE TABLE transaction_creditor (
     transaction_id INT NOT NULL,
-    creditor VARCHAR(40),
+    creditor_id INT,
     CONSTRAINT fk_transaction_id_creditor FOREIGN KEY(transaction_id) REFERENCES app_transaction(transaction_id),
-    CONSTRAINT u_creditor UNIQUE(creditor)
+    CONSTRAINT fk_creditor_id FOREIGN KEY(creditor_id) REFERENCES app_user(user_id)
 );
 
 CREATE TABLE transaction_debitor (
     transaction_id INT NOT NULL,
-    debitor VARCHAR(40),
+    debitor_id INT,
     CONSTRAINT fk_transaction_id_debitor FOREIGN KEY(transaction_id) REFERENCES app_transaction(transaction_id),
-    CONSTRAINT u_debitor UNIQUE(debitor) --dont make unique
+    CONSTRAINT fk_debitor_id FOREIGN KEY(debitor_id) REFERENCES app_user(user_id)
 );
 
 insert into app_user(username) values("user1");
@@ -75,13 +74,6 @@ insert into app_user(username) values("user2");
 insert into app_user(username) values("user3");
 insert into app_user(username) values("user4");
 insert into app_user(username) values("user5");
-
-insert into user_friend(user_id,friend) values (1, "friend1");
-insert into user_friend(user_id,friend) values (1, "friend2");
-insert into user_friend(user_id,friend) values (1, "friend3");
-insert into user_friend(user_id,friend) values (2, "friend4");
-insert into user_friend(user_id,friend) values (2, "friend5");
-insert into user_friend(user_id,friend) values (3, "friend6");
 
 insert into user_group(user_id, group_name) values(1, "group1");
 insert into user_group(user_id, group_name) values(1, "group2");
