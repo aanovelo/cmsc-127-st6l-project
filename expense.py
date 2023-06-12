@@ -9,18 +9,26 @@ def addExpense():
     print("\n===========EXPENSE MENU===========")
     print("[1] Add expense to a group")
     print("[2] Add expense to a friend")
+    print("[3] Exit")
     print("==================================\n")
-    inputUser = int(input("Input choice: "))
+    inputUser = int(input("Choose an operation: "))
 
     if inputUser == 1:
         group.printGroups()
-        groupChoice = int(input("Group choice: ")) - 1
+        groupChoice = int(input("Choose a group: ")) - 1
         addExpenseToGroup(groupChoice)
     
     elif inputUser == 2:
         friend.printFriends()
-        friendChoice = int(input("Friend choice: "))
+        friendChoice = int(input("Choose a friend: ")) - 1
         addExpenseToFriend(friendChoice)
+
+    elif inputUser == 3:
+        return
+    
+    else:
+        print("Invalid choice")
+        return
         
 def addExpenseToFriend(friendChoice):
     try:
@@ -31,8 +39,8 @@ def addExpenseToFriend(friendChoice):
         print(selectedFriend[friendChoice])
 
         expense_amount = float(input("Enter the expense amount: "))
-        print(f"Select\n[1] You\n[2] {selectedFriend[friendChoice][2]}")
-        paidBy = int(input("Paid by: "))
+        print(f"This transaction was paid by:\n[1] You\n[2] {selectedFriend[friendChoice][2]}")
+        paidBy = int(input("Select: "))
 
         # Insert the expense into the expenses table
         sql = "INSERT INTO app_transaction (user_id, friend_id, split_amount, transaction_date) VALUES (%s,%s,%s, CURRENT_DATE())"
@@ -184,7 +192,7 @@ def deleteExpense():
 
 def searchExpense():
     try:
-        print("Search Options\n[1] Search by friend name\n[2]Search by group name")
+        print("Search Options\n[1] Search by friend name\n[2] Search by group name")
         searchChoice = int(input("Choice: "))
 
         if searchChoice == 1:
@@ -221,6 +229,22 @@ def searchFriendExpense():
                              headers=["Transaction ID", "Friend", "Split Amount", "Transaction Date"],
                              tablefmt="psql")
             print(table)
+
+            lastindex = 0
+            for index, friendTransaction in enumerate(results, start=1):
+                print(f"[{index}] View details of transaction {friendTransaction[0]}")
+                lastindex = index
+            lastindex = lastindex + 1
+            print(f"[{lastindex}] Exit")
+
+            transactionChoice = int(input("Select a transaction to view: "))
+            if transactionChoice < 0 or transactionChoice > lastindex:
+                return
+            elif transactionChoice == lastindex:
+                print("Exiting")
+                return 
+            else:
+                viewTransaction(results[transactionChoice-1])
         else:
             print(f"No expenses found for friend '{friend_name}'.")
 
@@ -231,6 +255,49 @@ def searchFriendExpense():
     #     cursor.close()
     #     cnx.close()
         # print("Connection closed.")
+
+def viewTransaction(transaction):
+    getTransaction = "SELECT * FROM app_transaction WHERE transaction_id = %s"
+    cursor.execute(getTransaction,(transaction[0],))
+    selectedTransaction = cursor.fetchone()
+
+    # show details
+    print("\n============ TRANSACTION DETAILS ============")
+    # print the total expense
+    getTotalExpense = "SELECT (COUNT(debitor_id)+1)*split_amount FROM app_transaction NATURAL JOIN transaction_debitor WHERE transaction_id = %s"
+    cursor.execute(getTotalExpense, (selectedTransaction[0],))
+    totalExpense = cursor.fetchone()
+    print(f"TOTAL EXPENSE: {totalExpense[0]}")
+    # print the creditor
+    getCreditor = "SELECT creditor_id FROM transaction_creditor WHERE transaction_id = %s"
+    cursor.execute(getCreditor,(selectedTransaction[0],))
+    transacCreditor = cursor.fetchone()
+
+    getCreditorName = "SELECT username FROM app_user WHERE user_id = %s"
+    cursor.execute(getCreditorName,(transacCreditor[0],))
+    creditorName = cursor.fetchone()
+    print(f"PAID BY: {creditorName[0]}")
+
+    if selectedTransaction[2]:
+        # get the name of debtor
+        getDebtor = "SELECT debitor_id FROM transaction_debitor WHERE transaction_id = %s"
+        cursor.execute(getDebtor,(selectedTransaction[0],))
+        transacDebtor = cursor.fetchone()
+
+        getDebtorName = "SELECT username FROM app_user WHERE user_id = %s"
+        cursor.execute(getDebtorName,(transacDebtor[0],))
+        debtorName = cursor.fetchone()
+        print(f"DEBTOR: {debtorName[0]}")
+        print(f"AMOUNT OWED: PHP{selectedTransaction[4]}")
+    elif selectedTransaction[3]:
+        getGroupDebtor = "SELECT td.debitor_id, au.username FROM transaction_debitor td JOIN app_user au ON td.debitor_id = au.user_id WHERE td.transaction_id = %s;"
+        cursor.execute(getGroupDebtor,(selectedTransaction[0],))
+        groupDebtor = cursor.fetchall()
+
+        print("DEBTOR - AMOUNT OWED:")
+        for index, debtor in enumerate(groupDebtor, start=1):
+            print(f"  {index}. {debtor[1]}  - PHP{selectedTransaction[4]}")
+    print("=============================================")
 
 def searchGroupExpense():
     try:
@@ -249,11 +316,28 @@ def searchGroupExpense():
 
         # show the expenses
         if len(results) > 0:
-            print(f"Search Results for expenses of group '{group_name}':")
+            print(f"\nSearch Results for expenses of group '{group_name}':")
             table = tabulate(results,
                              headers=["Transaction ID", "Group", "Split Amount", "Transaction Date"],
                              tablefmt="psql")
             print(table)
+
+            lastindex = 0
+            for index, groupTransaction in enumerate(results, start=1):
+                print(f"[{index}] View details of transaction {groupTransaction[0]}")
+                lastindex = index
+            lastindex = lastindex + 1
+            print(f"[{lastindex}] Exit")
+
+            transactionChoice = int(input("Select action: "))
+            if transactionChoice < 0 or transactionChoice > lastindex:
+                return
+            elif transactionChoice == lastindex:
+                print("Exiting")
+                return 
+            else:
+                viewTransaction(results[transactionChoice-1])
+
         else:
             print(f"No expenses found for group '{group_name}'.")
 

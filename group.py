@@ -8,12 +8,67 @@ def addGroup():
     try:
         user_id = 1
         group_name = input("Enter the name of your group: ")
+        
         # Insert the group into the user_group table
         sql = "INSERT INTO user_group (user_id, group_name) VALUES (%s, %s)"
         cursor.execute(sql, (user_id, group_name))
         cnx.commit()
 
         print(f"Group '{group_name}' added successfully!")
+        
+        group_id = cursor.lastrowid 
+        loop = True
+
+        while loop:
+            cursor.execute("SELECT friend, friend_id FROM user_friend")
+            friends = cursor.fetchall()
+            
+            if len(friends) == 0:
+                print("No friends available to add.")
+                return
+            
+            print("\nExisting Friends:")
+            for i, friend in enumerate(friends, start=1):
+                friend_name = friend[0]
+                print(f"{i}. {friend_name}")
+            
+            friend_choice = input("Enter the number of a friend to add: ")
+            if friend_choice:
+                try:
+                    friend_choice = int(friend_choice)
+                    if friend_choice < 1 or friend_choice > len(friends):
+                        raise ValueError
+                except ValueError:
+                    print("Invalid input. Please enter a valid friend number.")
+                    return
+                
+                friend_id = friends[friend_choice - 1][1]
+                print(friend_id)
+                sql = "INSERT INTO group_member (group_id, member_id) VALUES (%s, %s)"
+                cursor.execute(sql, (group_id, friend_id))
+                cnx.commit()
+                
+                print(f"Friend '{friends[friend_choice - 1][0]}' added to the group!")
+
+                print("\nWould you like to add another friend?")
+                print("[0] No")
+                print("[1] Yes")
+                choice = int(input("Input: "))
+                try:
+                    if choice == 0:
+                        print(choice)
+                        print(loop)
+                        break
+                    elif choice == 1:
+                        print(choice)
+                        print(loop)
+                        continue
+                    else:
+                        print("Invalid input. Please enter a valid choice.")
+                        return
+                except ValueError:
+                    print("Invalid input. Please enter a valid choice.")
+                    return
 
     except Error as e:
         print("An error occurred while adding the group:", str(e))
@@ -102,6 +157,23 @@ def searchGroup():
             print(table)
         else:
             print(f"No results found for group '{group_name}'.")
+        
+        lastindex = 0
+
+        for index, group in enumerate(results, start=1):
+            print(f"[{index}] View details of {group[2]}")
+            lastindex =index
+        lastindex = lastindex + 1
+        print(f"[{lastindex}] Exit")
+        searchMenuInput = int(input("Choice: "))
+
+        if searchMenuInput < 0 or searchMenuInput > lastindex:
+            print("Invalid Choice.")
+            return
+        if searchMenuInput == lastindex:
+            return
+        else:
+            viewGroup(results[searchMenuInput - 1])
 
 
     except Error as e:
@@ -150,18 +222,33 @@ def updateGroup():
         # print("Connection closed.")
 
 
-def viewGroup():
+def viewGroup(group):
     try:
-        # Retrieve all groups
-        sql = "SELECT * FROM user_group"
-        cursor.execute(sql)
-        groups = cursor.fetchall()
+        groupSummary = f"======Details of {group[2]}======"
+        print(groupSummary)
 
-        # Print the list of groups
-        print("List of Groups:")
-        table = tabulate(groups, headers=["Group ID", "User ID", "Group Name", "Group Outstanding", "Total Expense"],
-                         tablefmt="psql")
-        print(table)
+        # Calculate total expenses
+        getTotalExpenses = "SELECT SUM(split_amount) FROM app_transaction WHERE group_id = %s"
+        cursor.execute(getTotalExpenses, (group[0],))
+        totalExpenses = cursor.fetchone()[0]
+
+        print(f"Total Expenses: {totalExpenses}")
+
+        # Calculate total credits
+        getTotalCredits = "SELECT SUM(split_amount) FROM app_transaction t JOIN transaction_creditor c ON t.transaction_id = c.transaction_id WHERE t.group_id = %s"
+        cursor.execute(getTotalCredits, (group[0],))
+        totalCredits = cursor.fetchone()[0]
+
+        # Calculate total debits
+        getTotalDebits = "SELECT SUM(split_amount) FROM app_transaction NATURAL JOIN transaction_debitor WHERE group_id=%s"
+        cursor.execute(getTotalDebits, (group[0],))
+        totalDebits = cursor.fetchone()[0]
+
+        # Calculate outstanding balance
+        print(f"Outstanding Balance: {totalDebits}")
+
+        endMenu = len(groupSummary) * "="
+        print(endMenu)
 
     except Error as e:
         print("An error occurred while viewing the groups:", str(e))
@@ -182,9 +269,11 @@ def printGroups():
         for group in groups:
             groupNames.append(group[2])
         # Print the list of groups
-        print("List of Groups:")
         table = tabulate(enumerate(groupNames,start=1), headers=["Choice", "Group Name"],
                         tablefmt="psql")
+        tableTitle = "LIST OF GROUPS"
+        print(len(table.split("\n")[1])*"=")
+        print(tableTitle)
         print(table)
     
     except Error as e:

@@ -103,6 +103,7 @@ def searchFriend():
     else:
         print(f"No results found for friend '{friend_name}'.")
     
+    # show friend operations
     lastindex = 0
     for index, friend in enumerate(results,start=1):
         print(f"[{index}] View details of {friend[2]}")
@@ -118,8 +119,8 @@ def searchFriend():
     if searchMenuInput == lastindex:
         return
     else:
-        print(results[searchMenuInput - 1])
-    # view details=
+        # view friend details
+        viewFriend(results[searchMenuInput - 1])
 
 # update a friend
 def updateFriend():
@@ -161,38 +162,22 @@ def updateFriend():
 
 
 # view a friend
-def viewFriend(results):
-    # get the list of friends
-    cursor.execute("SELECT * FROM user_friend")
-    friends = cursor.fetchall()
+def viewFriend(friend):
+    friendSummary = f"======Details of {friend[2]}======"
+    print(friendSummary)
+    # print outstanding balance
+    getAllDebit = "SELECT SUM(split_amount) FROM app_transaction NATURAL JOIN transaction_debitor WHERE debitor_id = %s"
+    cursor.execute(getAllDebit, (friend[1],))
+    allDebit = cursor.fetchone()
+    print(f"Outstanding Balance: {allDebit[0]}")
 
-    # print the list
-    print("List of Friends:")
-    table = tabulate(enumerate(friends, start=1), headers=["#", "User ID", "Friend"], tablefmt="psql")
-    print(table)
-    print()
+    getAllCredit = "SELECT SUM(split_amount) FROM app_transaction NATURAL JOIN transaction_creditor WHERE creditor_id = %s"
+    cursor.execute(getAllCredit, (friend[1],))
+    allCredit = cursor.fetchone()
+    print(f"Total Expenses: {allCredit[0]}")
+    endMenu = len(friendSummary)*"="
+    print(endMenu)
 
-    # ask the user for input
-    friend_index = int(input("Enter the number corresponding to the friend you want to view: ")) - 1
-    
-    if friend_index < 0 or friend_index >= len(friends):
-        print("Invalid friend index.")
-        return
-
-    friend = friends[friend_index]
-
-    # print the details
-    print("Friend Details:")
-    details = tabulate([friend], headers=["User ID", "Friend"], tablefmt="psql")
-    print(details)
-
-    print("[1] Create transaction")
-    print("[2] Exit")
-    choice1 = int(input("Enter your choice: "))
-    if (choice1 == 1):
-        expense.addExpense("Friend")
-    elif (choice1 == 2):
-        print("Exiting")
 
 # this is just to check if it was successful
 def printFriends():

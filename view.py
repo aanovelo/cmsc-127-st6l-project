@@ -1,30 +1,29 @@
 from connect import cnx, cursor
 from tabulate import tabulate
 
-# view all expenses made within a month
-def expense_within_month(): #gagawing SUM na lang itoo
-    query = "SELECT * FROM app_transaction WHERE MONTH(transaction_date) = [month] AND YEAR(transaction_date) = [year]"
+# view the sum of expenses made within a month
+def expense_within_month(month, year):
+    query = f"SELECT SUM(amount) as total_expenses FROM app_transaction WHERE MONTH(transaction_date) = {month} AND YEAR(transaction_date) = {year}"
     cursor.execute(query)
-    result = cursor.fetchall()
-    headers = [i[0] for i in cursor.description]
-    print(tabulate(result, headers=headers))
+    result = cursor.fetchone()
+    total_expenses = result[0]
+    print("Total expenses within the month: $", total_expenses)
 
-# view all expenses made with a friend
-def expenses_with_friend(): #gagawing SUM na lang itoo
-    query = "SELECT at.* FROM app_transaction at JOIN user_friend uf ON at.user_id = uf.user_id WHERE uf.friend = '[friend_name]'"
+# view the sum of expenses made with a friend
+def expenses_with_friend(friend_name):
+    query = f"SELECT SUM(amount) as total_expenses FROM app_transaction at JOIN user_friend uf ON at.user_id = uf.user_id WHERE uf.friend = '{friend_name}'"
     cursor.execute(query)
-    result = cursor.fetchall()
-    headers = [i[0] for i in cursor.description]
-    print(tabulate(result, headers=headers))
+    result = cursor.fetchone()
+    total_expenses = result[0]
+    print("Total expenses with friend: $", total_expenses)
 
-# view all expenses made with a group
-def expense_with_grp(): #gagawing SUM na lang itoo
-    query = "SELECT at.* FROM app_transaction at JOIN user_group ug ON at.group_id = ug.group_id WHERE ug.group_id = [group_id]"
+# view the sum of expenses made with a group
+def expense_with_grp(group_id):
+    query = f"SELECT SUM(amount) as total_expenses FROM app_transaction at JOIN user_group ug ON at.group_id = ug.group_id WHERE ug.group_id = {group_id}"
     cursor.execute(query)
-    result = cursor.fetchall()
-    headers = [i[0] for i in cursor.description]
-    print(tabulate(result, headers=headers))
-
+    result = cursor.fetchone()
+    total_expenses = result[0]
+    print("Total expenses with the group: $", total_expenses)
 # view current balance from all expenses
 def current_balance():
     query = "SELECT user_id, username, current_bal - user_outstanding AS balance FROM app_user"
@@ -35,7 +34,7 @@ def current_balance():
 
 # view all friends with outstanding balance
 def view_with_balance():
-    query = "SELECT au.user_id, au.username, uf.friend, uf.user_id AS friend_user_id, au.user_outstanding FROM app_user au JOIN user_friend uf ON au.user_id = uf.user_id WHERE au.user_outstanding > 0"
+    query = "SELECT au.user_id, au.username, uf.friend, uf.friend_id, uf.outstanding_balance FROM app_user au JOIN user_friend uf ON au.user_id = uf.user_id WHERE uf.outstanding_balance > 0"
     cursor.execute(query)
     result = cursor.fetchall()
     headers = [i[0] for i in cursor.description]
