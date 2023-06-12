@@ -163,27 +163,47 @@ def updateFriend():
 
 # view a friend
 def viewFriend(friend):
-    friendSummary = f"======Details of {friend[2]}======"
+    friendSummary = f"\n====== Details of {friend[2]} ======"
     print(friendSummary)
     # print outstanding balance
-    getAllDebit = "SELECT SUM(split_amount) FROM app_transaction NATURAL JOIN transaction_debitor WHERE debitor_id = %s"
+    getAllDebit = "SELECT SUM(at.split_amount) FROM app_transaction at JOIN transaction_debitor td ON at.transaction_id = td.transaction_id WHERE td.debitor_id = %s"
     cursor.execute(getAllDebit, (friend[1],))
     allDebit = cursor.fetchone()
     print(f"Outstanding Balance: {allDebit[0]}")
 
-    getAllCredit = "SELECT SUM(split_amount) FROM app_transaction NATURAL JOIN transaction_creditor WHERE creditor_id = %s"
-    cursor.execute(getAllCredit, (friend[1],))
-    allCredit = cursor.fetchone()
-    print(f"Total Expenses: {allCredit[0]}")
+    getAllExpenses = "SELECT SUM(split_amount) FROM app_transaction WHERE friend_id = %s"
+    cursor.execute(getAllExpenses, (friend[1],))
+    allExpenses = cursor.fetchone()
+    print(f"Total Expenses Together: {allExpenses[0]*2}")
     endMenu = len(friendSummary)*"="
     print(endMenu)
 
 
 # this is just to check if it was successful
 def printFriends():
-    cursor.execute('SELECT * FROM user_friend')  
-    col = [desc[0] for desc in cursor.description]
-    row = cursor.fetchall()
-    table = tabulate(enumerate(row, start=0), headers=["#",col], tablefmt='psql')
-    print(table)
+    # cursor.execute('SELECT * FROM user_friend')  
+    # col = [desc[0] for desc in cursor.description]
+    # row = cursor.fetchall()
+    # table = tabulate(enumerate(row, start=0), headers=["#",col], tablefmt='psql')
+    # print(table)
+
+    try:
+        # Retrieve all groups
+        cursor.execute("SELECT * FROM user_friend WHERE user_id = 1")
+        friends = cursor.fetchall()
+
+        friendNames = []
+        for friend in friends:
+            friendNames.append(friend[2])
+        # Print the list of groups
+        table = tabulate(enumerate(friendNames,start=1), headers=["Choice", "Group Name"],
+                        tablefmt="psql")
+        tableTitle = "LIST OF FRIENDS"
+        print(len(table.split("\n")[1])*"=")
+        print(tableTitle)
+        print(table)
+    
+    except Error as e:
+        print("An error occurred while printing the groups:", str(e))
+
 

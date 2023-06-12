@@ -1,4 +1,3 @@
-
 from connect import cnx, cursor
 from tabulate import tabulate
 from mysql.connector import Error
@@ -36,7 +35,6 @@ def addExpenseToFriend(friendChoice):
         cursor.execute(sql)
         selectedFriend = cursor.fetchall()
         selectedFriendId = selectedFriend[friendChoice][1]
-        print(selectedFriend[friendChoice])
 
         expense_amount = float(input("Enter the expense amount: "))
         print(f"This transaction was paid by:\n[1] You\n[2] {selectedFriend[friendChoice][2]}")
@@ -50,7 +48,6 @@ def addExpenseToFriend(friendChoice):
         sql2 = "SELECT * FROM app_transaction ORDER BY transaction_id DESC LIMIT 1" #get the last row of app_transaction
         cursor.execute(sql2)
         lastRow = cursor.fetchone()
-        print(lastRow)
         
         if paidBy == 1:
             addDebitor = "INSERT INTO transaction_debitor values(%s, %s)"
@@ -66,7 +63,7 @@ def addExpenseToFriend(friendChoice):
             cnx.commit()
         
         print(f"Expense for friend '{selectedFriend[friendChoice][2]}' added successfully!")
-        printExpenses()
+        # printExpenses()
 
     except (ValueError, Error) as e:
         print("An error occurred while adding the expense:", str(e))
@@ -82,16 +79,14 @@ def addExpenseToGroup(groupChoice):
         cursor.execute(sql)
         selectedGroup = cursor.fetchall()
         selectedGroupId = selectedGroup[groupChoice][0]
-        print(selectedGroup[groupChoice])
         
         expense_amount = float(input("Enter the expense amount: "))
         
         query_members = "SELECT * from group_member WHERE group_id = %s"
         cursor.execute(query_members, (selectedGroupId,))
         numberOfMembers = cursor.fetchall()
-        print(numberOfMembers)
-        print("\nSelect\n[1] You")
-
+        
+        print(f"\nMembers of {selectedGroup[groupChoice][2]}\n[1] You")
         friendName = "SELECT * from app_user WHERE user_id = %s"
         for index, member in enumerate(numberOfMembers, start=2):
             cursor.execute(friendName,(member[1],))
@@ -132,7 +127,6 @@ def addExpenseToGroup(groupChoice):
             cnx.commit()
 
         print(f"Expense for group '{selectedGroup[groupChoice][2]}' added successfully!")
-        printExpenses()
 
     except (ValueError, Error) as e:
         print("An error occurred while adding the expense:", str(e))

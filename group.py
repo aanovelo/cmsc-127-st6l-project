@@ -224,7 +224,7 @@ def updateGroup():
 
 def viewGroup(group):
     try:
-        groupSummary = f"======Details of {group[2]}======"
+        groupSummary = f"\n======Details of {group[2]}======"
         print(groupSummary)
 
         # Calculate total expenses
@@ -232,7 +232,12 @@ def viewGroup(group):
         cursor.execute(getTotalExpenses, (group[0],))
         totalExpenses = cursor.fetchone()[0]
 
-        print(f"Total Expenses: {totalExpenses}")
+        getNoOfMembers = "SELECT COUNT(member_id) FROM group_member WHERE group_id = %s"
+        cursor.execute(getNoOfMembers, (group[0],))
+        noOfMembers = cursor.fetchone()[0] + 1 
+
+
+        print(f"Total Expenses Together: {totalExpenses*noOfMembers}")
 
         # Calculate total credits
         getTotalCredits = "SELECT SUM(split_amount) FROM app_transaction t JOIN transaction_creditor c ON t.transaction_id = c.transaction_id WHERE t.group_id = %s"

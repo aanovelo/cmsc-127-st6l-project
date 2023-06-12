@@ -84,15 +84,13 @@ def group_function():
     else:
         print("Invalid choice!")
 
-def view_owedio():
+def view_owedio(yourBalance):
     print("\n=======================VIEW=======================")
-    print("[1] View all expenses made within a month;")
-    print("[2] View all expenses made with a friend")
-    print("[3] View all expenses made with a group")
-    print("[4] View current balance from all expenses")
-    print("[5] View all friends with outstanding balance")
-    print("[6] View all groups")
-    print("[7] View all groups with an outstanding balance")
+    print("[1] View all expenses made within a month")
+    print("[2] View current balance from all expenses")
+    print("[3] View all friends with outstanding balance")
+    print("[4] View all groups with an outstanding balance")
+    print("[5] Back")
     print("==================================================\n")
 
     choice_4 = input("Enter the number corresponding to the feature you want to choose: ")
@@ -100,21 +98,17 @@ def view_owedio():
     if choice_4 == '1':
         view.expense_within_month()
     elif choice_4 == '2':
-        view.expenses_with_friend
+        view.current_balance(yourBalance)
     elif choice_4 == '3':
-        view.expense_with_grp
+        view.view_with_balance()
     elif choice_4 == '4':
-        view.current_balance
+        view.view_all_groups_w_balance()
     elif choice_4 == '5':
-        view.view_all_groups_w_balance
-    elif choice_4 == '6':
-        view.view_all_groups
-    elif choice_4 == '7':
-        view.view_all_groups_w_balance
+        return
     else:
         print("Invalid choice!")
 
-def menu():
+def menu(yourBalance):
     print("WELCOME TO OWEDIO")
     
     # menu will be printed over and over until the user exits the program
@@ -123,7 +117,7 @@ def menu():
         print("[1] Add, delete, search, and update an expense")
         print("[2] Add, delete, search, and update a friend")
         print("[3] Add, delete, search, and update a group")
-        print("[4] View")
+        print("[4] View Logs")
         print("[5] Exit")
         print("================================================")
 
@@ -139,7 +133,7 @@ def menu():
         elif choice == '3':
             group_function()
         elif choice == '4':
-            view_owedio()
+            view_owedio(yourBalance)
         elif choice == '5':
             print("Thank you for useing OWEDIO")
             break
@@ -147,4 +141,10 @@ def menu():
         else:
             print("Invalid choice!\n")
 
-menu()
+# login to program
+def login():
+    print("================ WELCOME ================")
+    yourBalance = float(input("Enter your current balance: "))
+    menu(yourBalance)
+
+login()
